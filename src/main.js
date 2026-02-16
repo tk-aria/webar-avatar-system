@@ -130,7 +130,8 @@ class WebARApp {
 
       this.vrm.scene.visible = false;
       this.vrm.scene.position.set(0, 0, -1.5);
-      this.vrm.scene.rotation.y = Math.PI;
+      // VRMは正面向き（rotation.y = 0）で配置
+      this.vrm.scene.rotation.y = 0;
       this.scene.add(this.vrm.scene);
 
       this.animator = new AvatarAnimator(this.vrm);
