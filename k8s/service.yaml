@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: webar-avatar
+  namespace: default
+  labels:
+    app: webar-avatar
+  annotations:
+    tailscale.com/expose: "true"
+    tailscale.com/hostname: "webar-avatar"
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  selector:
+    app: webar-avatar
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+      protocol: TCP

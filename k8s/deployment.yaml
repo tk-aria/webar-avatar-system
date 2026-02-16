@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webar-avatar
+  namespace: default
+  labels:
+    app: webar-avatar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webar-avatar
+  template:
+    metadata:
+      labels:
+        app: webar-avatar
+    spec:
+      containers:
+        - name: webar-avatar
+          image: ghcr.io/granizm/webar-avatar:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          env:
+            - name: PORT
+              value: "3000"
+            - name: NODE_ENV
+              value: "production"
+            - name: CHARACTER_NAME
+              value: "美少女アバター"
+            - name: CHARACTER_SYSTEM_PROMPT
+              value: "あなたは親切で可愛らしい美少女アシスタントです。ユーザーと楽しく会話してください。短く簡潔に返答し、絵文字を適度に使ってください。"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      imagePullSecrets:
+        - name: ghcr-secret

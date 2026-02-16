@@ -15,8 +15,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-app.use(express.static(join(__dirname, '../dist')));
-app.use('/models', express.static(join(__dirname, '../public/models')));
+// 静的ファイル配信（distからすべて配信、modelsも含まれる）
+app.use(express.static(join(__dirname, '../dist'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.vrm')) {
+      res.setHeader('Content-Type', 'model/gltf-binary');
+    }
+  }
+}));
 
 const OPENCLAW_API_URL = process.env.OPENCLAW_API_URL || 'https://api.openai.com/v1/chat/completions';
 const OPENCLAW_API_KEY = process.env.OPENCLAW_API_KEY || '';
