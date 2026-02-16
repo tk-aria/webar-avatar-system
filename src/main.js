@@ -21,18 +21,62 @@ class WebARApp {
     this.clock = new THREE.Clock();
     this.isARSupported = false;
     this.avatarSummoned = false;
+    this.webglSupported = true;
 
     this.init();
   }
 
   async init() {
     this.updateStatus('シーンを初期化中...');
+
+    if (!this.checkWebGLSupport()) {
+      this.webglSupported = false;
+      this.setupFallbackMode();
+      return;
+    }
+
     this.setupScene();
     this.setupLights();
     await this.loadVRM();
     this.setupEventListeners();
     this.checkARSupport();
     this.animate();
+  }
+
+  checkWebGLSupport() {
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      return !!gl;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  setupFallbackMode() {
+    this.updateStatus('WebGL非対応 - フォールバックモード');
+    this.loading.style.display = 'none';
+    this.arButton.disabled = false;
+    this.arButton.textContent = 'チャットを開始';
+
+    // フォールバック用のアバター画像を表示
+    const fallbackDiv = document.createElement('div');
+    fallbackDiv.id = 'fallback-avatar';
+    fallbackDiv.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;color:white;">
+        <div style="font-size:120px;margin-bottom:20px;">👧</div>
+        <div style="font-size:18px;">美少女アバター</div>
+        <div style="font-size:12px;color:#888;margin-top:8px;">(WebGL非対応環境)</div>
+      </div>
+    `;
+    fallbackDiv.style.display = 'none';
+    this.container.appendChild(fallbackDiv);
+
+    this.setupEventListeners();
+
+    // ChatManagerをフォールバックモードで初期化
+    this.chatManager = new ChatManager(null, null);
+    this.chatManager.init();
   }
 
   setupScene() {
@@ -132,11 +176,27 @@ class WebARApp {
   }
 
   async summonAvatar() {
+    if (!this.webglSupported) {
+      this.showFallbackAvatar();
+      return;
+    }
+
     if (this.isARSupported) {
       await this.startARSession();
     } else {
       this.startNonARMode();
     }
+  }
+
+  showFallbackAvatar() {
+    const fallbackDiv = document.getElementById('fallback-avatar');
+    if (fallbackDiv) {
+      fallbackDiv.style.display = 'block';
+    }
+    this.avatarSummoned = true;
+    this.arButton.style.display = 'none';
+    this.chatContainer.classList.add('active');
+    this.updateStatus('アバター召喚完了！');
   }
 
   async startARSession() {
